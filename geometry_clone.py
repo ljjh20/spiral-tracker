@@ -5,7 +5,11 @@ from numba import jit
 import pickle
 from typing import Optional, Literal
 
-from .parameter_space import ParameterSpace
+try:
+    from .parameter_space import ParameterSpace
+except ImportError:
+    class ParameterSpace:  # type: ignore[no-redef]
+        pass
 
 
 @dataclass
@@ -466,7 +470,9 @@ class Spring:
             s_norm -= 1
             s_norm *= -1
 
-        tip_dth = 2 * np.arcsin(ures[-1] / (2 * self.constraints.r[0])) * 180/ np.pi
+        tip_dth = 2 * np.arcsin(
+            np.clip(ures[-1] / max(2 * self.constraints.r[0], 1e-12), -1.0, 1.0)
+        ) * 180 / np.pi
         print(f"Optimizer Tip Rotation: {tip_dth} Degrees")
 
         return ures, s_norm

@@ -33,7 +33,11 @@ MANIFEST
 *.spec
 
 .claude
-
+*.mov
+.DS_Store
+recordings
+results
+results_vq1
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
