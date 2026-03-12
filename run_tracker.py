@@ -218,6 +218,42 @@ def _optimizer_rotation_deg(spring) -> float | None:
     return float(np.degrees(rom))
 
 
+def _annotate_endpoint_displacement(
+    ax,
+    y_value: float,
+    label: str,
+    color: str | tuple[float, float, float] | tuple[int, int, int],
+    *,
+    linestyle: str = "--",
+    text_offset_pts: float = 0.0,
+) -> None:
+    """Draw a horizontal guide plus an axis marker for an endpoint displacement."""
+    ax.axhline(y_value, color=color, lw=1.0, ls=linestyle, alpha=0.65, zorder=1)
+    trans = matplotlib.transforms.blended_transform_factory(ax.transAxes, ax.transData)
+    ax.plot(
+        [0.0],
+        [y_value],
+        marker=">",
+        ms=6,
+        color=color,
+        transform=trans,
+        clip_on=False,
+        zorder=6,
+    )
+    ax.annotate(
+        label,
+        xy=(1.0, y_value),
+        xycoords=trans,
+        xytext=(-6, text_offset_pts),
+        textcoords="offset points",
+        ha="right",
+        va="center",
+        fontsize=8,
+        color=color,
+        bbox=dict(boxstyle="round,pad=0.15", facecolor="white", edgecolor=color, alpha=0.85),
+    )
+
+
 def _find_reference_spring_pkl(pkl_dir: Path) -> Path | None:
     pkls = sorted(pkl_dir.glob("*.pkl"))
     if not pkls:
@@ -938,6 +974,13 @@ def main() -> None:
     fig, ax = plt.subplots(figsize=(10, 5))
     final_x, final_y, final_plot_rows = _camera_ures_curve(final, arc_col, disp_col)
     ax.plot(final_x, final_y, "o-", lw=2, color="steelblue")
+    if len(final_y):
+        _annotate_endpoint_displacement(
+            ax,
+            float(final_y[-1]),
+            f"tracker final node = {float(final_y[-1]):.3f} {unit}",
+            "steelblue",
+        )
     for x_i, (_, row) in zip(final_x, final_plot_rows.iterrows()):
         ax.annotate(str(int(row["dot_id"])),
                     (x_i, row[disp_col]),
@@ -1071,6 +1114,24 @@ def main() -> None:
                 color="crimson",
                 label=f"tracker peak frame {peak_frame_idx}  (max = {peak_max_disp:.3f} mm)",
             )
+            if len(spring_ures_mm):
+                _annotate_endpoint_displacement(
+                    ax_peak,
+                    float(spring_ures_mm[-1]),
+                    f"pkl final node = {float(spring_ures_mm[-1]):.3f} mm",
+                    "black",
+                    linestyle=":",
+                    text_offset_pts=8.0,
+                )
+            if len(peak_disp):
+                _annotate_endpoint_displacement(
+                    ax_peak,
+                    float(peak_disp[-1]),
+                    f"tracker final node = {float(peak_disp[-1]):.3f} mm",
+                    "crimson",
+                    linestyle="--",
+                    text_offset_pts=-8.0,
+                )
             ax_peak.set_xlabel("Normalised arc length  s / s_total")
             ax_peak.set_ylabel("Displacement  (mm)")
             ax_peak.set_title("URES comparison  —  tracker peak frame vs Spring .pkl")
