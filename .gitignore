@@ -26,6 +26,13 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# data directories
+sweep_pkl_files
+Alu*
+results_pre_intrinsics
+
+.codex_tmp_force_frames
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.

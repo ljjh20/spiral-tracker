@@ -1,34 +1,22 @@
 
-def ures_solidworks_2025(
+import numpy as np
+import pandas as pd
+
+
+def _solidworks_curve_2025(
     csv_file,
-    spring,
-    type: str = "ures",
-    side: str | None = None,
-    report_tip_rotation: bool = True,
+    value_name: str,
 ):
     df = pd.read_csv(
         csv_file,
         skiprows=10,
         header=None,
         usecols=[0, 1, 2],
-        names=["point", "x", "ures"],
+        names=["point", "x", value_name],
     )
-    if type == "ures" and side not in {"inner", "outer", None}:
-        raise ValueError("side must be 'inner', 'outer', or None")
-
     df["point"] = df["point"].astype(str).str.strip().astype(float)
-    if type == "ures":
-        df["ures"] = df["ures"].astype(str).str.strip().astype(float) * 1e-3
-    else:
-        df["ures"] = df["ures"].astype(str).str.strip().astype(float)
+    df[value_name] = df[value_name].astype(str).str.strip().astype(float)
     df["x"] = df["x"].astype(str).str.strip().astype(float)
-
-    # Pick the endpoint closest to zero displacement as the fixed-start side.
-    if type == "ures" and len(df) > 1:
-        u_start = abs(float(df["ures"].iloc[0]))
-        u_end = abs(float(df["ures"].iloc[-1]))
-        if u_end < u_start:
-            df = df.iloc[::-1].reset_index(drop=True)
 
     if len(df) > 1:
         x0 = float(df["x"].iloc[0])
@@ -39,6 +27,28 @@ def ures_solidworks_2025(
             df["s"] = (df["x"] - x0) / (x1 - x0)
     else:
         df["s"] = 0.0
+    return df
+
+
+def ures_solidworks_2025(
+    csv_file,
+    spring,
+    type: str = "ures",
+    side: str | None = None,
+    report_tip_rotation: bool = True,
+):
+    df = _solidworks_curve_2025(csv_file, "ures")
+    if type == "ures" and side not in {"inner", "outer", None}:
+        raise ValueError("side must be 'inner', 'outer', or None")
+    if type == "ures":
+        df["ures"] = df["ures"] * 1e-3
+
+    # Pick the endpoint closest to zero displacement as the fixed-start side.
+    if type == "ures" and len(df) > 1:
+        u_start = abs(float(df["ures"].iloc[0]))
+        u_end = abs(float(df["ures"].iloc[-1]))
+        if u_end < u_start:
+            df = df.iloc[::-1].reset_index(drop=True)
 
     if type == "ures":
         x_root, y_root = spring.construct_root_geometry()
@@ -79,3 +89,7 @@ def ures_solidworks_2025(
             print(f"Solidworks Tip Rotation ({label}): {tip_dth} Degrees")
 
     return df
+
+
+def stress_solidworks_2025(csv_file):
+    return _solidworks_curve_2025(csv_file, "stress")
