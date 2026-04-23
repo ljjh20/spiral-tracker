@@ -1,0 +1,13 @@
+{
+  "green_dots": {
+    "h_high": 65,
+    "h_low": 32,
+    "max_area": 26800.0,
+    "min_area": 16.0,
+    "morph_kernel": 5,
+    "s_high": 255,
+    "s_low": 76,
+    "v_high": 255,
+    "v_low": 78
+  }
+}
